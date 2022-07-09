@@ -152,6 +152,82 @@ server.port=8071
 ```
 
 
+## Reading Config form Config Server
+
+Make sure in pom.xml have spring cloud config properly:
+
+```xml
+<properties>
+	<java.version>11</java.version>
+    <spring-cloud.version>2020.0.2</spring-cloud.version>
+</properties>
+
+...
+
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-dependencies</artifactId>
+            <version>${spring-cloud.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+Add `spring-cloud-starter-config` and `spring-boot-configuration-processor` dependency:
+
+```
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-config</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-configuration-processor</artifactId>
+    <optional>true</optional>
+</dependency>
+```
+
+Add config server config in `application.properties`
+
+```
+# Config Server
+spring.application.name=accounts
+spring.profiles.active=prod
+spring.config.import=optional:configserver:http://localhost:8071
+```
+
+Add the config class:
+
+```java
+@Configuration
+@ConfigurationProperties(prefix = "accounts")
+@Getter @Setter @ToString
+public class AccountsServiceConfig {
+	 private String msg;
+	 private String buildVersion;
+	 private Map<String, String> mailDetails;
+	 private List<String> activeBranches;
+}
+```
+
+Note the mapping format in the config file and in the java class file.
+
+![img.png](img/img.png)
+
+If all set, you should be able to read config form config server
+
+![img.png](img.png)
+ 
+
+
+
+
+
+
 
 
 

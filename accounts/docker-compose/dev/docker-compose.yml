@@ -3,20 +3,20 @@ version: "3.8"
 services:
 
   configserver:
-    image: eazybytes/configserver:latest
+    image: frannnnk/configserver:latest
     mem_limit: 700m
     ports:
       - "8071:8071"
     networks:
-     - eazybank
+     - frannnnk
    
   eurekaserver:
-    image: eazybytes/eurekaserver:latest
+    image: frannnnk/eurekaserver:latest
     mem_limit: 700m
     ports:
       - "8070:8070"
     networks:
-     - eazybank
+     - frannnnk
     depends_on:
       - configserver
     deploy:
@@ -30,12 +30,12 @@ services:
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       
   accounts:
-    image: eazybytes/accounts:latest
+    image: frannnnk/accounts:latest
     mem_limit: 700m
     ports:
       - "8080:8080"
     networks:
-      - eazybank
+      - frannnnk
     depends_on:
       - configserver
       - eurekaserver
@@ -51,12 +51,12 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
   
   loans:
-    image: eazybytes/loans:latest
+    image: frannnnk/loans:latest
     mem_limit: 700m
     ports:
       - "8090:8090"
     networks:
-      - eazybank
+      - frannnnk
     depends_on:
       - configserver
       - eurekaserver
@@ -72,12 +72,12 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
     
   cards:
-    image: eazybytes/cards:latest
+    image: frannnnk/cards:latest
     mem_limit: 700m
     ports:
       - "9000:9000"
     networks:
-      - eazybank
+      - frannnnk
     depends_on:
       - configserver
       - eurekaserver
@@ -93,12 +93,12 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
   
   gatewayserver:
-    image: eazybytes/gatewayserver:latest
+    image: frannnnk/gatewayserver:latest
     mem_limit: 700m
     ports:
       - "8072:8072"
     networks:
-      - eazybank
+      - frannnnk
     depends_on:
       - configserver
       - eurekaserver
@@ -117,4 +117,4 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
     
 networks:
-  eazybank:
+  frannnnk:
