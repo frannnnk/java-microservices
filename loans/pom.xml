@@ -10,7 +10,7 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
-	<groupId>com.eaztbytes</groupId>
+	<groupId>com.frank</groupId>
 	<artifactId>loans</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
@@ -55,7 +55,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<image>
-						<name>frank/${project.artifactId}</name>
+						<name>frannnnk/${project.artifactId}</name>
 					</image>
 				</configuration>
 			</plugin>

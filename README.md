@@ -6,9 +6,9 @@
 ### Buidling docker
 
 ```Bash
-docker build . -t frank/accounts
-docker build . -t frank/loans
-docker build . -t frank/cards
+docker build . -t frannnnk/accounts
+docker build . -t frannnnk/loans
+docker build . -t frannnnk/cards
 ```
 
 ### Check Docker Images
@@ -43,6 +43,15 @@ docker stats                            --> show statistics
 docker run -d -p 8080:8080 <image_id>   --> run in detached mode
 ```
 
+### Push images to dockerhub
+
+```Bash
+docker push docker.io/frannnnk/accounts
+docker push docker.io/frannnnk/cards
+docker push docker.io/frannnnk/loans
+```
+
+
 ## Buildpacks
 
 >A buildpack is a program that turns source code into a runnable container image. Usually, buildpacks encapsulate a single language ecosystem toolchain. There are buildpacks for Ruby, Go, NodeJs, Java, Python, and more. These buildpacks can be grouped together into collections called a builder.
@@ -67,10 +76,13 @@ Ref: https://technology.doximity.com/articles/buildpacks-vs-dockerfiles
 </build>
 ```
 
-Run below command to generate docker image using buildpack internally 
+Generate docker image using buildpack 
 ```bash
 mvn spring-boot:build-image
 ```
+
+
+
 
 
 
