@@ -43,6 +43,35 @@ docker stats                            --> show statistics
 docker run -d -p 8080:8080 <image_id>   --> run in detached mode
 ```
 
+## Buildpacks
+
+>A buildpack is a program that turns source code into a runnable container image. Usually, buildpacks encapsulate a single language ecosystem toolchain. There are buildpacks for Ruby, Go, NodeJs, Java, Python, and more. These buildpacks can be grouped together into collections called a builder.
+
+Ref: https://technology.doximity.com/articles/buildpacks-vs-dockerfiles
+
+### Add configuration in pom file
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <configuration>
+                <image>
+                    <name>frank/${project.artifactId}</name>
+                </image>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
+Run below command to generate docker image using buildpack internally 
+```bash
+mvn spring-boot:build-image
+```
+
 
 
 
