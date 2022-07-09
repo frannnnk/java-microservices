@@ -82,6 +82,70 @@ mvn spring-boot:build-image
 ```
 
 
+## Config Server
+
+Spring Cloud Config is Spring's client/server approach for storing and serving distributed configurations across multiple applications and environments.
+
+
+Add `dependencyManagement` in pom
+
+```xml
+<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+```
+
+Add `@EnableConfigServer` in Application Class
+
+```Java
+@SpringBootApplication
+@EnableConfigServer
+public class ConfigserverApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ConfigserverApplication.class, args);
+	}
+
+}
+```
+
+Add config in the application.properties
+
+```
+spring.application.name=configserver
+spring.profiles.active=native
+spring.cloud.config.server.native.search-locations=classpath:/config
+
+server.port=8071
+```
+
+Then, you can access the config server via http://localhost:8071/accounts/default 
+
+
+### Config Local Locations
+
+`spring.cloud.config.server.native.search-locations` can be set to:
+- file:///C://config
+- classpath:/config
+
+### Config Git Locations
+
+
+
+
+
+
+
+
+
 
 
 
