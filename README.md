@@ -138,6 +138,19 @@ Then, you can access the config server via http://localhost:8071/accounts/defaul
 
 ### Config Git Locations
 
+We can also load config form git repo, which is also a recommended way. 
+
+Update `application.properties`:
+
+```
+spring.application.name=configserver
+spring.profiles.active=git
+spring.cloud.config.server.git.uri=https://github.com/frannnnk/microservices-config.git
+spring.cloud.config.server.git.clone-on-start=true
+spring.cloud.config.server.git.default-label=main
+server.port=8071
+```
+
 
 
 
