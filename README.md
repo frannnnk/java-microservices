@@ -261,6 +261,22 @@ management.endpoints.web.exposure.include=*
 then we can call the `/actuator/refresh` endpoint with a `POST` request to reload the configs. 
 
 
+## Config Encryption
+
+Adding a `encrypt.key` setting in `application.properties` will enable the config encryption feature and expose `/encrypt` and `/decrypt` endpoint. 
+
+```
+# encryption
+encrypt.key=frank
+```
+
+In the config source, we can use the encrypted value instead of plain text with a `{cipher}` prefix. The config server will handle the decryption automatically when called by serivce endpoint.
+
+```
+accounts.msg={cipher}79373b6e1ca954d5a85d1d36737a5e5085743cdde4c878e33487e0b9fef4d09f
+```
+
+
 
 
 
