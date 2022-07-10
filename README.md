@@ -223,6 +223,48 @@ If all set, you should be able to read config form config server
 ![img.png](img.png)
  
 
+## Refresh Scope
+
+With `@RefreshScope`, SpringBoot can create an API for us to reload the config properties without restarting the application.
+
+First, add the annotation in the application class.
+
+```java
+@SpringBootApplication
+@RefreshScope
+@ComponentScans({ @ComponentScan("com.frank.accounts.controller")})
+@EnableJpaRepositories("com.frank.accounts.repository")
+@EntityScan("com.frank.accounts.model")
+public class AccountsApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(AccountsApplication.class, args);
+	}
+}
+```
+
+Then, make sure we have `spring-boot-starter-actuator` dependency included.
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+in the `application.properties`, also need to config the management endpoint to include the `/actuator/refresh` endpoint.
+
+```
+management.endpoints.web.exposure.include=*
+```
+
+then we can call the `/actuator/refresh` endpoint with a `POST` request to reload the configs. 
+
+
+
+
+
+
 
 
 
