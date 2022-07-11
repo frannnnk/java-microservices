@@ -78,7 +78,7 @@ Ref: https://technology.doximity.com/articles/buildpacks-vs-dockerfiles
 
 Generate docker image using buildpack 
 ```bash
-mvn spring-boot:build-image
+mvn spring-boot:build-image -Dmaven.test.skip=true
 ```
 
 
@@ -275,6 +275,224 @@ In the config source, we can use the encrypted value instead of plain text with 
 ```
 accounts.msg={cipher}79373b6e1ca954d5a85d1d36737a5e5085743cdde4c878e33487e0b9fef4d09f
 ```
+
+## Service Discovery 
+
+Service Discovery is one of the most important topic in microservices. And one essential concept to know is that Service Discovery here is purely for Back-end service only. Do not confuse with UI application which will be handled in API gateway section.
+
+![img_1.png](img_1.png)
+
+### Create Eureka Server 
+
+![img_2.png](img_2.png)
+
+Modify the `pom.xml` to exclude some ribbon dependencies. (as the project is already in maintenance mode, we replace it by using `spring cloud load balance` for load balancing ) 
+
+```
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+    <exclusions>
+        <exclusion>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-ribbon</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>com.netflix.ribbon</groupId>
+            <artifactId>ribbon-eureka</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
+
+also add configuration for image generation
+
+```
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <configuration>
+                <image>
+                    <name>frannnnk/${project.artifactId}</name>
+                </image>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
+Add `@EnableEurekaServer` annotation to enable eureka server
+
+```java
+@SpringBootApplication
+@EnableEurekaServer
+public class EurekaserverApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(EurekaserverApplication.class, args);
+	}
+}
+```
+
+add config to `application.properties`
+
+```
+spring.application.name=eurekaserver
+spring.config.import=optional:configserver:http://localhost:8071/
+spring.cloud.loadbalancer.ribbon.enabled=false
+```
+
+we also need to create a GitHub config file https://github.com/frannnnk/microservices-config/blob/main/eurekaserver.properties 
+
+```
+server.port=8070
+
+eureka.instance.hostname=localhost
+eureka.client.registerWithEureka=false    <-- Do not register self as a microservice
+eureka.client.fetchRegistry=false
+eureka.client.serviceUrl.defaultZone=http://${eureka.instance.hostname}:${server.port}/eureka/
+```
+
+Once the application is set and started, we can access the UI in http://localhost:8070/ 
+
+![img_3.png](img_3.png)
+
+### Register Microservices to Eureka Server
+
+Add dependency in the microservice's pom.xml
+
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+```
+
+add config in the `application.properties`
+
+```properties
+# eureka config
+eureka.instance.preferIpAddress = true 
+eureka.client.registerWithEureka = true
+eureka.client.fetchRegistry = true
+eureka.client.serviceUrl.defaultZone = http://localhost:8070/eureka/
+
+## Configuring info endpoint for actuator
+info.app.name=Accounts Microservice
+info.app.description=Eazy Bank Accounts Application
+info.app.version=1.0.0
+
+endpoints.shutdown.enabled=true
+management.endpoint.shutdown.enabled=true
+```
+
+start the application and we should see the application is registered with eureka server
+
+![img_4.png](img_4.png)
+
+Accessing http://localhost:8070/eureka/apps we can see the application status. or http://localhost:8070/eureka/apps/accounts for individual app status
+
+
+### Deregister Microservices from Eureka Server
+
+![img_5.png](img_5.png)
+
+![img_6.png](img_6.png)
+
+### Invoking another microservice from microservice
+
+Add dependency
+
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+```
+
+Add `@EnableFeignClients` in application class
+
+```java
+@SpringBootApplication
+@RefreshScope
+@ComponentScans({ @ComponentScan("com.eazybytes.accounts.controller")})
+@EnableJpaRepositories("com.eazybytes.accounts.repository")
+@EnableFeignClients
+@EntityScan("com.eazybytes.accounts.model")
+public class AccountsApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(AccountsApplication.class, args);
+	}
+}
+```
+
+setup FeignClient
+
+```java
+package com.eazybytes.accounts.service.client;
+
+import com.eazybytes.accounts.model.Customer;
+import com.eazybytes.accounts.model.Loans;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.List;
+
+@FeignClient("loans")
+public interface LoansFeignClient {
+    @PostMapping(value = "myLoans", consumes = "application/json")
+    List<Loans> getLoansDetails(@RequestBody Customer customer);
+}
+
+```
+
+
+invoke microservices in controller
+
+
+```java
+
+@Autowired LoansFeignClient loansFeignClient;
+@Autowired CardsFeignClient cardsFeignClient;
+
+...
+
+
+@PostMapping("/myCustomerDetails")
+	public CustomerDetails myCustomerDetails(@RequestBody Customer customer) {
+		Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
+		List<Loans> loans = loansFeignClient.getLoansDetails(customer);
+		List<Cards> cards = cardsFeignClient.getCardsDetails(customer);
+		CustomerDetails customerDetails = new CustomerDetails();
+		customerDetails.setAccounts(accounts);
+		customerDetails.setLoans(loans);
+		customerDetails.setCards(cards);
+		return customerDetails;
+	}
+    
+    
+```
+
+![img_7.png](img_7.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
