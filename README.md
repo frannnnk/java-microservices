@@ -479,6 +479,164 @@ invoke microservices in controller
 
 ![img_7.png](img_7.png)
 
+## Resilience 
+
+### Circuit Beaker Pattern
+
+With 
+
+Add dependency
+
+```xml
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-spring-boot2</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-circuitbreaker</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-timelimiter</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aop</artifactId>
+</dependency>
+```
+
+Add annotation to API:
+
+```java
+@PostMapping("/myCustomerDetails")
+@CircuitBreaker(name="detailsForCustomerSupportApp")
+public CustomerDetails myCustomerDetails(@RequestBody Customer customer) {
+    Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
+    List<Loans> loans = loansFeignClient.getLoansDetails(customer);
+    List<Cards> cards = cardsFeignClient.getCardsDetails(customer);
+    CustomerDetails customerDetails = new CustomerDetails();
+    customerDetails.setAccounts(accounts);
+    customerDetails.setLoans(loans);
+    customerDetails.setCards(cards);
+    return customerDetails;
+}
+```
+
+Add config in `application.properties`
+
+```properties
+## resilience4j
+resilience4j.circuitbreaker.configs.default.registerHealthIndicator= true
+resilience4j.circuitbreaker.instances.detailsForCustomerSupportApp.minimumNumberOfCalls= 5
+resilience4j.circuitbreaker.instances.detailsForCustomerSupportApp.failureRateThreshold= 50
+resilience4j.circuitbreaker.instances.detailsForCustomerSupportApp.waitDurationInOpenState= 30000
+resilience4j.circuitbreaker.instances.detailsForCustomerSupportApp.permittedNumberOfCallsInHalfOpenState=2
+```
+
+#### Circuit Beaker Fallback
+
+Adding a function in the same class can privide a fallback function for the Circuit Beaker. Specify in the `fallbackMethod` and the method needs to have a `Throwable throwable` input parameter.
+
+```java
+@PostMapping("/myCustomerDetails")
+@CircuitBreaker(name="detailsForCustomerSupportApp", fallbackMethod = "myCustomerDetailsFallBack")
+public CustomerDetails myCustomerDetails(@RequestBody Customer customer) {
+    Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
+    List<Loans> loans = loansFeignClient.getLoansDetails(customer);
+    List<Cards> cards = cardsFeignClient.getCardsDetails(customer);
+    CustomerDetails customerDetails = new CustomerDetails();
+    customerDetails.setAccounts(accounts);
+    customerDetails.setLoans(loans);
+    customerDetails.setCards(cards);
+    return customerDetails;
+}
+
+/**
+ * - Accept the same object with the original API
+ * - Accept a throwable is required
+ *
+ */
+private CustomerDetails myCustomerDetailsFallBack(Customer customer, Throwable throwable) {
+    Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
+    List<Loans> loans = loansFeignClient.getLoansDetails(customer);
+    CustomerDetails customerDetails = new CustomerDetails();
+    customerDetails.setAccounts(accounts);
+    customerDetails.setLoans(loans);
+    return customerDetails;
+}
+
+```
+
+
+### Retry Pattern
+
+![img_8.png](img_8.png)
+
+
+Add config in `application.properties`
+
+```properties
+resilience4j.retry.configs.default.registerHealthIndicator= true
+resilience4j.retry.instances.retryForCustomerDetails.maxAttempts=3
+resilience4j.retry.instances.retryForCustomerDetails.waitDuration=2000
+```
+
+Note that the name in the config of `application.properties`  must match the one set in the `@Retry(name="retryForCustomerDetails")`.
+
+```
+@PostMapping("/myCustomerDetailsRetry")
+@Retry(name="retryForCustomerDetails")
+public CustomerDetails myCustomerDetailsRetry(@RequestBody Customer customer) {
+    Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
+    List<Loans> loans = loansFeignClient.getLoansDetails(customer);
+    List<Cards> cards = cardsFeignClient.getCardsDetails(customer);
+    CustomerDetails customerDetails = new CustomerDetails();
+    customerDetails.setAccounts(accounts);
+    customerDetails.setLoans(loans);
+    customerDetails.setCards(cards);
+    return customerDetails;
+}
+```
+
+### Rate Limit Pattern
+
+![img_10.png](img_10.png)
+
+
+Add config in `application.properties`
+
+```properties
+resilience4j.ratelimiter.configs.default.registerHealthIndicator= true
+resilience4j.ratelimiter.instances.rateLimitForCustomerDetails.timeoutDuration=5000
+resilience4j.ratelimiter.instances.rateLimitForCustomerDetails.limitRefreshPeriod=5000
+resilience4j.ratelimiter.instances.rateLimitForCustomerDetails.limitForPeriod=1
+```
+
+Note that the name in the config of `application.properties`  must match the one set in the `@Retry(name="retryForCustomerDetails")`.
+
+```
+@PostMapping("/myCustomerDetailsRateLimit")
+@RateLimiter(name="rateLimitForCustomerDetails" , fallbackMethod = "myCustomerDetailsFallBack2")
+public CustomerDetails myCustomerDetailsRateLimit(@RequestBody Customer customer) {
+    Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
+    List<Loans> loans = loansFeignClient.getLoansDetails(customer);
+    List<Cards> cards = cardsFeignClient.getCardsDetails(customer);
+    CustomerDetails customerDetails = new CustomerDetails();
+    customerDetails.setAccounts(accounts);
+    customerDetails.setLoans(loans);
+    customerDetails.setCards(cards);
+    return customerDetails;
+}
+```
+
+
+### Bulkhead Pattern
+
+![img_11.png](img_11.png)
+
+![img_12.png](img_12.png)
+
 
 
 
