@@ -6,6 +6,9 @@ package com.eazybytes.accounts.controller;
 import com.eazybytes.accounts.model.*;
 import com.eazybytes.accounts.service.client.CardsFeignClient;
 import com.eazybytes.accounts.service.client.LoansFeignClient;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,18 +67,63 @@ public class AccountsController {
 	}
 
 	@PostMapping("/myCustomerDetails")
+	@CircuitBreaker(name="detailsForCustomerSupportApp", fallbackMethod = "myCustomerDetailsFallBack")
 	public CustomerDetails myCustomerDetails(@RequestBody Customer customer) {
 		Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
 		List<Loans> loans = loansFeignClient.getLoansDetails(customer);
 		List<Cards> cards = cardsFeignClient.getCardsDetails(customer);
-
 		CustomerDetails customerDetails = new CustomerDetails();
 		customerDetails.setAccounts(accounts);
 		customerDetails.setLoans(loans);
 		customerDetails.setCards(cards);
-
 		return customerDetails;
-
 	}
+
+	@PostMapping("/myCustomerDetailsRetry")
+	@Retry(name="retryForCustomerDetails" , fallbackMethod = "myCustomerDetailsFallBack")
+	public CustomerDetails myCustomerDetailsRetry(@RequestBody Customer customer) {
+		Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
+		List<Loans> loans = loansFeignClient.getLoansDetails(customer);
+		List<Cards> cards = cardsFeignClient.getCardsDetails(customer);
+		CustomerDetails customerDetails = new CustomerDetails();
+		customerDetails.setAccounts(accounts);
+		customerDetails.setLoans(loans);
+		customerDetails.setCards(cards);
+		return customerDetails;
+	}
+
+	@PostMapping("/myCustomerDetailsRateLimit")
+	@RateLimiter(name="rateLimitForCustomerDetails" , fallbackMethod = "myCustomerDetailsFallBack2")
+	public CustomerDetails myCustomerDetailsRateLimit(@RequestBody Customer customer) {
+		Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
+		List<Loans> loans = loansFeignClient.getLoansDetails(customer);
+		List<Cards> cards = cardsFeignClient.getCardsDetails(customer);
+		CustomerDetails customerDetails = new CustomerDetails();
+		customerDetails.setAccounts(accounts);
+		customerDetails.setLoans(loans);
+		customerDetails.setCards(cards);
+		return customerDetails;
+	}
+
+	/**
+	 * - Accept the same object with the original API
+	 * - Accept a throwable is required
+	 *
+	 */
+	private CustomerDetails myCustomerDetailsFallBack(Customer customer, Throwable throwable) {
+		Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
+		List<Loans> loans = loansFeignClient.getLoansDetails(customer);
+		CustomerDetails customerDetails = new CustomerDetails();
+		customerDetails.setAccounts(accounts);
+		customerDetails.setLoans(loans);
+		return customerDetails;
+	}
+
+	private CustomerDetails myCustomerDetailsFallBack2(Customer customer, Throwable throwable) {
+
+		CustomerDetails details = new CustomerDetails();
+		return details;
+	}
+
 
 }
