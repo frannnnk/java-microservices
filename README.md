@@ -640,7 +640,108 @@ public CustomerDetails myCustomerDetailsRateLimit(@RequestBody Customer customer
 
 
 
+## Spring Cloud Gateway
 
+![img_13.png](img_13.png)
+
+![img_14.png](img_14.png)
+
+### Dependencies
+
+![img_15.png](img_15.png)
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-config</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-gateway</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    <scope>runtime</scope>
+    <optional>true</optional>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+
+...
+
+<dependencyManagement>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+    </dependency>
+</dependencies>
+</dependencyManagement>
+
+```
+
+```java
+@SpringBootApplication
+@EnableEurekaClient
+public class GatewayserverApplication {
+    ...
+}
+```
+
+```properties
+spring.application.name=gatewayserver
+spring.config.import=optional:configserver:http://localhost:8071/
+management.endpoints.web.exposure.include=*
+
+## Configuring info endpoint
+info.app.name=Gateway Server Microservice
+info.app.description=Eazy Bank Gateway Server Application
+info.app.version=1.0.0
+
+spring.cloud.gateway.discovery.locator.enabled=true   --> With this config, the gateway will fetch the detail from the eureka server
+spring.cloud.gateway.discovery.locator.lowerCaseServiceId=true
+
+logging.level.com.eaztbytes.gatewayserver: DEBUG
+```
+
+Route rewrite 
+
+```java
+@Bean
+public RouteLocator myRoutes(RouteLocatorBuilder builder) {
+    return builder.routes()
+        .route(p -> p
+            .path("/frannnnk/accounts/**")
+            .filters(f -> f.rewritePath("/frannnnk/accounts/(?<segment>.*)","/${segment}")
+                            .addResponseHeader("X-Response-Time",new Date().toString()))
+            .uri("lb://ACCOUNTS")).
+        route(p -> p
+                .path("/frannnnk/loans/**")
+                .filters(f -> f.rewritePath("/frannnnk/loans/(?<segment>.*)","/${segment}")
+                        .addResponseHeader("X-Response-Time",new Date().toString()))
+                .uri("lb://LOANS")).
+        route(p -> p
+                .path("/frannnnk/cards/**")
+                .filters(f -> f.rewritePath("/frannnnk/cards/(?<segment>.*)","/${segment}")
+                        .addResponseHeader("X-Response-Time",new Date().toString()))
+                .uri("lb://CARDS")).build();
+}
+```
 
 
 
