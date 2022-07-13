@@ -743,6 +743,12 @@ public RouteLocator myRoutes(RouteLocatorBuilder builder) {
 }
 ```
 
+## Spring Cloud support for Tracing and Log Aggregation
+
+![img_16.png](img_16.png)
+
+![img_17.png](img_17.png)
+
 
 
 

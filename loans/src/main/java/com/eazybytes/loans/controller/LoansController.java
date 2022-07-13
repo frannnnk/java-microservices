@@ -5,6 +5,8 @@ package com.eazybytes.loans.controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,8 +36,12 @@ public class LoansController {
 	@Autowired
 	LoansServiceConfig loansConfig;
 
+	private static final Logger logger = LoggerFactory.getLogger(LoansController.class);
+
+
 	@PostMapping("/myLoans")
 	public List<Loans> getLoansDetails(@RequestBody Customer customer) {
+		logger.info("loans getLoansDetails");
 		List<Loans> loans = loansRepository.findByCustomerIdOrderByStartDtDesc(customer.getCustomerId());
 		if (loans != null) {
 			return loans;
