@@ -777,9 +777,83 @@ docker run -d -p 9411:9411 openzipkin/zipkin
 
 Access browser:http://localhost:9411/zipkin/ 
 
+![img_18.png](img_18.png)
+
+## Monitoring
+
+add dependency:
+
+add time aspect
+
+```java
+@SpringBootApplication
+@RefreshScope
+@ComponentScans({ @ComponentScan("com.frannnnk.accounts.controller")})
+@EnableJpaRepositories("com.frannnnk.accounts.repository")
+@EnableFeignClients
+@EntityScan("com.frannnnk.accounts.model")
+public class AccountsApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(AccountsApplication.class, args);
+	}
+
+	@Bean
+	public TimedAspect timedAspect(MeterRegistry registry) {
+		return new TimedAspect(registry);
+	}
+}
+```
+
+Add `@Timed` annotation
+
+This will expose a new custom metric to return how much time the function executed. 
+
+```java
+@PostMapping("/myAccount")
+@Timed(value = "getAccountDetails.time", description = "Time taken to return Account Details")
+public Accounts getAccountDetails(@RequestBody Customer customer) {
+
+    logger.info("getAccountDetails");
+
+    Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId());
+    if (accounts != null) {
+        return accounts;
+    } else {
+        return null;
+    }
+
+}
+```
+
+After this we can go to http://localhost:8080/actuator/metrics to see the available metrics. 
+
+As we will use prometheus to show the UI of the data, we also add a prometheus plug in and can translate the data from actuator to prometheus format. We can access http://localhost:8080/actuator/prometheus for the prometheus data format.
+
+![img_19.png](img_19.png)
+
+
+### Setup prometheus to monitor microservices
+
+### Setup grafana to monitor microservices
+
+After started grafana, http://localhost:3000/, we can setup datasource using prometheus.
+
+![img/screen-20220713163950.gif](img/screen-20220713163950.gif)
+
+then import dashboard using link below:
+
+JVM
+https://grafana.com/grafana/dashboards/4701
+
+SpringBoot
+https://grafana.com/grafana/dashboards/11378
+
+![img/screen-20220713164514.gif](img/screen-20220713164514.gif)
 
 
 
+
+![img_20.png](img_20.png)
 
 
 
