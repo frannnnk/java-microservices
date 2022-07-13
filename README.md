@@ -749,6 +749,37 @@ public RouteLocator myRoutes(RouteLocatorBuilder builder) {
 
 ![img_17.png](img_17.png)
 
+Add dependency to pom 
+
+```
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-sleuth</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-sleuth-zipkin</artifactId>
+</dependency>
+```
+
+config `application.properties`
+
+```properties
+spring.sleuth.sampler.percentage=1
+spring.zipkin.baseUrl=http://localhost:9411/
+```
+
+run docker 
+
+```bash
+docker run -d -p 9411:9411 openzipkin/zipkin
+```
+
+Access browser:http://localhost:9411/zipkin/ 
+
+
+
+
 
 
 
